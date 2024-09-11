@@ -1,4 +1,3 @@
-```markdown
 # London Fire Brigade
 
 ## Description
