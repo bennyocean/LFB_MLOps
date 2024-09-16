@@ -7,5 +7,3 @@ mongodb.txt
 *.pyc
 __pycache__/
 .vscode/
-/logs/
-*.log

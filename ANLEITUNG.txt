@@ -1,0 +1,11 @@
+API erreichbar unter 
+	http://127.0.0.1:8000
+oder	http://localhost:8000/
+
+mit dem /generate-token Endpoint könnt ihr ein token generieren, den dann einfügen wenn ihr zB /evaluate aufrufen wollt, müsst ihr das so eingeben: http://127.0.0.1:8000/evaluate?token=eyJhbGciOiJIUzI1NiIsInR5c.... (hier den ganzen Token einfügen)
+
+1. Generiert euch eine Datei die ".env" heißt und füllt sie hiermit aus:
+
+SECRET_KEY=
+PYTHONPATH=.
+MONGO_URI = 
