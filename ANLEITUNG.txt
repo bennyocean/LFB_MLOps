@@ -20,7 +20,7 @@ Den secret key müsst ihr euch jeweils selber generieren zB mit so einem script:
 
 den Output dann als SECRET_KEY in eurer .env Datei abspeichern. 
 
-PYTHONPATH sollte so passen mit dem . und die MOONGO_URI ist so ein String: mongodb+srv://<individual_username>:<password>@cluster.mongodb.net/lfb
+PYTHONPATH sollte so passen mit dem . und die MOONGO_URI ist so ein String: mongodb+srv://<individual_username>:<password>@lfb.2ilrk.mongodb.net/lfb
 einfach <individual_username> durch euren login namen ersetzen und <password> selbstverständlich mit eurem passwort. (Die Daten hierfür sende ich euch im Slack)
 
 2. Auf https://cloud.mongodb.com/v2/66e40dcc395bf74c2a73b977#/security/network/accessList oder auf mongodb.com und dann Network Access (unten links) klicken
