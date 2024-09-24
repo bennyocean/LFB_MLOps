@@ -1,4 +1,4 @@
-from app.utils import load_model_and_pca, preprocess_test_data, connect_to_mongo, fetch_sample_data
+from app.utils import load_model_and_pca, connect_to_mongo, fetch_sample_data
 from fastapi import APIRouter, Depends
 from app.auth import verify_token
 
@@ -8,18 +8,25 @@ model, pca = load_model_and_pca()
 
 def fetch_and_transform_data():
     collection = connect_to_mongo()
-    raw_features = fetch_sample_data(collection)
+    raw_features_list = fetch_sample_data(collection)
 
-    # Exclude '_id' from raw features
-    del raw_features['_id']
+    for raw_features in raw_features_list:
+        if '_id' in raw_features:
+            del raw_features['_id']
 
-    # Preprocess the test data with PCA
-    transformed_features, _ = preprocess_test_data(raw_features, pca)
+    first_raw_features = raw_features_list[0]
+
+    if "extra_column" in first_raw_features:
+        del first_raw_features["extra_column"]
+
+    transformed_features = pca.transform([list(first_raw_features.values())])
+
     return transformed_features
+
+
 
 @router.post("/predict")
 def predict(token: str = Depends(verify_token)):
-    # Fetch and transform the input data
     transformed_features = fetch_and_transform_data()
 
     prediction = model.predict(transformed_features)

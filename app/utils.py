@@ -44,12 +44,18 @@ def preprocess_test_data(raw_test_data, pca_model):
     features = [
         [
             item.get(feature, 0) for feature in FEATURE_COLUMNS
+            if feature not in ['_id', 'ResponseTimeBinary']  # Exclude _id and target
         ]
         for item in raw_test_data
     ]
     
+     # Debug: print number of features
+    if len(features[0]) != 319:
+        print(f"Number of features after filtering: {len(features[0])}")
+    
     transformed_features = pca_model.transform(features)
     return transformed_features, features
+
 
 def evaluate_model_on_test_set():
     collection = connect_to_mongo()
@@ -71,5 +77,8 @@ def log_evaluation_result(accuracy):
     logging.basicConfig(filename='logs/evaluation.log', level=logging.INFO, 
                         format='%(asctime)s - %(message)s')
     logging.info(f'Model evaluation completed. Accuracy: {accuracy:.4f}')
+
+def log_info(message):
+    logging.info(message)
 
 
