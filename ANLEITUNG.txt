@@ -44,6 +44,11 @@ Das sind unsere very basic ersten Endpoints:
 /generate-token: For generating JWT tokens
 
 
+um Airflow zu starten (in 2 unterschiedlichen Terminals): 
+- airflow webserver --port 8080
+- airflow scheduler 
+
+
 
 
 

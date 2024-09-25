@@ -7,3 +7,4 @@ mongodb.txt
 *.pyc
 __pycache__/
 .vscode/
+airflow.db
