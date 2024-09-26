@@ -39,6 +39,33 @@ conda env export > environment.yaml
 
 Share this updated `environment.yaml` with your teammates to keep the environment consistent.
 
+## Building and Running Containers
+
+To build and run the containers, execute the following command:
+
+```bash
+docker-compose up --build
+```
+
+This command will:
+- Build the images defined in the `docker-compose.yml`.
+- Start two services:
+  - The **API** service, which is built on a FastAPI.
+  - The **MongoDB** service, which connects to a remote MongoDB instance.
+
+### Accessing the Services
+- **API**: Access the FastAPI server at [http://localhost:8000](http://localhost:8000).
+
+### Stopping the Containers
+To stop the running containers, you can use:
+
+```bash
+docker-compose down
+```
+
+This will stop and remove all containers defined in the `docker-compose.yml`.
+
+
 ## Contributing
 Provide guidelines on how others can contribute to your project.
 
