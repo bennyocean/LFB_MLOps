@@ -39,6 +39,7 @@ dependencies:
   - openssl=3.3.2
   - packaging=24.1
   - pandas=2.2.2
+  - passlibX
   - pip=24.2
   - py-xgboost=2.1.1
   - pybind11-abi=4
