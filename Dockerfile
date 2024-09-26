@@ -25,5 +25,8 @@ ENV LOG=1
 # Expose the port
 EXPOSE 8000
 
+# Healthcheck to monitor application
+HEALTHCHECK CMD ["curl", "--fail", "http://localhost:8000", "||", "exit 1"]
+
 # Run FastAPI app directly
 CMD ["uvicorn", "app.main:app", "--host=0.0.0.0", "--port=8000", "--reload"]
