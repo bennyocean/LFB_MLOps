@@ -291,5 +291,7 @@ dependencies:
   - zlib=1.2.13=h2466b09_6
   - zstd=1.5.5=hd43e919_2
   - pip:
+      - bcrypt==4.2.0
+      - passlib==1.7.4
       - streamlit-shap==1.0.2
-prefix: C:\Users\Isi\anaconda3\envs\lfb_env
+prefix: C:\Users\reneh\.conda\envs\lfb_env
