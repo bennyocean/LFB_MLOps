@@ -8,3 +8,4 @@ mongodb.txt
 __pycache__/
 .vscode/
 airflow.db
+/logs/
