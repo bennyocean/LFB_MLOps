@@ -1,0 +1,61 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: lfb_api_image
+    ports:
+      - "8000:8000"
+    environment:
+      MONGO_URI: "mongodb+srv://admin:R0vTrwRkhguP0tK4@lfb.2ilrk.mongodb.net/lfb"
+      PYTHONPATH: "/app"
+    depends_on:
+      - mongodb
+    #command: ["/bin/bash", "-c", "source activate clean_env && uvicorn main:app --host 0.0.0.0 --port 8000"]
+    networks:
+      - lfb_network
+
+  mongodb:
+    image: mongo:latest
+    container_name: lfb_mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: R0vTrwRkhguP0tK4
+    ports:
+      - "27017:27017"
+    networks:
+      - lfb_network
+    command: ["mongod", "--auth", "--bind_ip_all", "--port", "27017"]
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo_express
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: R0vTrwRkhguP0tK4
+      ME_CONFIG_MONGODB_URL: mongodb://admin:R0vTrwRkhguP0tK4@mongodb:27017/ 
+      #ME_CONFIG_MONGODB_SERVER: mongodb
+    depends_on:
+      - mongodb
+    networks:
+      - lfb_network
+
+  tests:
+    image: lfb_api_image
+    depends_on:
+      - api
+    environment:
+      LOG: "1"
+    volumes:
+      - ./logs:/app/logs
+    networks:
+      - lfb_network
+    #command: ["/bin/bash", "-c", "source activate clean_env && pytest --log-cli-level=INFO > ./logs/test_results.log"]
+
+networks:
+  lfb_network:
+    driver: bridge

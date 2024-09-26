@@ -33,3 +33,27 @@ INFO:numexpr.utils:NumExpr defaulting to 6 threads.
 INFO:root:Loaded model and PCA from disk
 INFO:numexpr.utils:NumExpr defaulting to 6 threads.
 INFO:root:Loaded model and PCA from disk
+INFO:numexpr.utils:NumExpr defaulting to 8 threads.
+INFO:root:Loaded model and PCA from disk
+INFO:numexpr.utils:NumExpr defaulting to 8 threads.
+INFO:root:Loaded model and PCA from disk
+INFO:numexpr.utils:NumExpr defaulting to 8 threads.
+INFO:root:Loaded model and PCA from disk
+INFO:numexpr.utils:NumExpr defaulting to 8 threads.
+INFO:root:Loaded model and PCA from disk
+INFO:numexpr.utils:NumExpr defaulting to 8 threads.
+INFO:root:Loaded model and PCA from disk
+INFO:numexpr.utils:NumExpr defaulting to 8 threads.
+INFO:root:Loaded model and PCA from disk
+INFO:root:Connected to MongoDB
+INFO:root:Fetched 10 sample records from MongoDB
+INFO:numexpr.utils:NumExpr defaulting to 8 threads.
+INFO:root:Loaded model and PCA from disk
+INFO:numexpr.utils:NumExpr defaulting to 8 threads.
+INFO:root:Loaded model and PCA from disk
+INFO:root:Connected to MongoDB
+INFO:root:Fetched 10 sample records from MongoDB
+INFO:root:Connected to MongoDB
+INFO:root:Fetched 10 sample records from MongoDB
+INFO:root:New data added: incident_time='string' grid_node=0
+INFO:root:New data added: incident_time='string' grid_node=0
