@@ -10,20 +10,20 @@ Before getting started, ensure you have the following installed:
 
 ## Setup Instructions
 
-### 1. Clone the Repository
+### Clone the Repository
 ```bash
 git clone https://github.com/DataScientest-Studio/AUG24-BMLOPS-INT-LFB.git
 cd AUG24-BMLOPS-INT-LFB
 ```
 
-### 2. Create the Conda Environment
+### Create the Conda Environment
 Use the provided `environment.yaml` file to create the environment:
 
 ```bash
 conda env create -f environment.yaml
 ```
 
-### 3. Activate the Environment
+### Activate the Environment
 Activate the Conda environment before running any scripts:
 
 ```bash
@@ -65,6 +65,17 @@ docker-compose down
 
 This will stop and remove all containers defined in the `docker-compose.yml`.
 
+## Airflow
+- Starting the **Webserver**: 
+```bash 
+airflow webserver --port 8080
+```
+- Starting the **scheduler**: 
+```bash 
+airflow scheduler
+```
+- Start these in two different terminals
+- Access the interface at [http://localhost:8080](http://localhost:8080).
 
 ## Contributing
 Provide guidelines on how others can contribute to your project.

@@ -182,6 +182,7 @@ dependencies:
       - pytest==8.3.3
       - pytest-asyncio==0.24.0
       - python-daemon==3.0.1
+      - python-graphviz==0.20.3
       - python-nvd3==0.16.0
       - python-slugify==8.0.4
       - pyyaml==6.0.2
