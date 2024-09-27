@@ -4,7 +4,7 @@ from app.utils import evaluate_model_on_test_set
 
 router = APIRouter()
 
-@router.get("/evaluate")
+@router.get("/evaluate", tags=["Model Evaluation"])
 def evaluate_model(token: str = Depends(verify_token)):
     accuracy = evaluate_model_on_test_set()
 
