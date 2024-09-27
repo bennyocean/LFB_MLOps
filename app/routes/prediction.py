@@ -25,7 +25,7 @@ def fetch_and_transform_data():
 
 
 
-@router.post("/predict")
+@router.post("/predict", tags=["Model Prediction"])
 def predict(token: str = Depends(verify_token)):
     transformed_features = fetch_and_transform_data()
 
