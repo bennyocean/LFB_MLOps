@@ -18,3 +18,5 @@ xgboost==2.1.1
 cryptography==43.0.1
 docker==7.1.0
 pyjwt==2.9.0
+python-multipart==0.0.10
+python-jose==3.3.0
