@@ -1,11 +1,25 @@
-from fastapi import APIRouter, Depends
-from app.auth import verify_token
+from fastapi import APIRouter, Depends, HTTPException
 from app.utils import evaluate_model_on_test_set
+from app.auth import verify_token
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
 router = APIRouter()
 
-@router.get("/evaluate", tags=["Model Evaluation"])
-def evaluate_model(token: str = Depends(verify_token)):
-    accuracy = evaluate_model_on_test_set()
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
-    return {"model_accuracy": accuracy}
+@router.post("/evaluate", tags=["Model Evaluation"])
+async def evaluate_model(token: str = Depends(oauth2_scheme)):
+    # Überprüfen des Tokens und Abrufen des Benutzers
+    current_user = verify_token(token)
+
+    try:
+        # Bewertung des Modells auf dem Testdatensatz
+        accuracy = evaluate_model_on_test_set()
+        return {
+            "evaluation_result": {
+                "accuracy": accuracy
+            }
+        }
+    except Exception as e:
+        # Fehlerbehandlung, falls während der Evaluierung etwas schiefgeht
+        raise HTTPException(status_code=500, detail=f"Model evaluation failed: {str(e)}")
