@@ -8,6 +8,7 @@ services:
       - "8000:8000"
     environment:
       SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM}
       PYTHONPATH: ${PYTHONPATH}
       MONGO_URI: ${MONGO_URI}
     depends_on:
