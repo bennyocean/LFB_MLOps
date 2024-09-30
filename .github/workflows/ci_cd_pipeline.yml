@@ -4,10 +4,11 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - main  # Oder der Branch, auf dem der Workflow laufen soll
+      - main  
   pull_request:
     branches:
       - main
+  workflow_dispatch: # Ermöglicht das manuelle Ausführen des Workflows
 
 jobs:
   test:
@@ -40,7 +41,7 @@ jobs:
       # Führe die Pytest-Tests aus
       - name: Run Pytest
         run: |
-          docker-compose exec -T lfb_api pytest
+          docker-compose exec -T lfb_api pytest -v
 
       # Beende und entferne die Docker-Container
       - name: Tear down Docker Compose
