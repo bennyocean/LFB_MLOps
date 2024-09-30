@@ -35,10 +35,18 @@ def load_model_and_pca():
     logging.info("Loaded model and PCA from disk")
     return model, pca
 
-def fetch_sample_data(collection, limit=10):
-    sample_data = collection.find().limit(limit)
-    logging.info(f"Fetched {limit} sample records from MongoDB")
-    return list(sample_data)
+def fetch_sample_data(collection):
+    # Verwende MongoDB Aggregation mit $sample, um einen zufälligen Datensatz zu holen
+    sample_data = collection.aggregate([{"$sample": {"size": 1}}])
+    
+    random_data = list(sample_data)
+    
+    if random_data:
+        logging.info(f"Fetched a random sample record from MongoDB")
+        return random_data 
+    else:
+        logging.warning(f"No records found in MongoDB")
+        return [None]  
 
 def preprocess_test_data(raw_test_data, pca_model):
     features = [
