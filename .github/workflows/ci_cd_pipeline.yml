@@ -1,6 +1,5 @@
 name: CI/CD Pipeline
 
-# Der Workflow wird bei jedem Push oder Pull-Request ausgeführt
 on:
   push:
     branches:
@@ -8,28 +7,36 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch: # Ermöglicht das manuelle Ausführen des Workflows
+  workflow_dispatch: # Allows manual execution of the workflow
 
 jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      ALGORITHM: ${{ secrets.ALGORITHM }}
+      PYTHONPATH: "."
+      MONGO_URI: ${{ secrets.MONGO_URI }}
+      MONGO_INITDB_ROOT_USERNAME: ${{ secrets.MONGO_INITDB_ROOT_USERNAME }}
+      MONGO_INITDB_ROOT_PASSWORD: ${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}
+
     steps:
-      # Checke den Code aus dem Repository aus
+      # Check out the code from the repository
       - name: Check out code
         uses: actions/checkout@v3
 
-      # Installiere Docker Compose
-      - name: Install Docker Compose
+      # Install Docker and Docker Compose
+      - name: Install Docker and Docker Compose
         run: |
           sudo apt-get update
-          sudo apt-get install -y docker-compose
+          sudo apt-get install -y docker docker-compose
 
-      # Setze Docker Compose auf und starte die Container
+      # Set up and start the Docker Compose services
       - name: Set up Docker Compose
         run: docker-compose up -d --build
 
-      # Warte darauf, dass die MongoDB-Datenbank bereit ist
+      # Wait until MongoDB service is available
       - name: Wait for MongoDB to be ready
         run: |
           while ! nc -z localhost 27017; do
@@ -38,11 +45,11 @@ jobs:
           done
         timeout-minutes: 2
 
-      # Führe die Pytest-Tests aus
+      # Run Pytest in the `api` service container (use the service name, not container name)
       - name: Run Pytest
         run: |
-          docker-compose exec -T api pytest -v
+          docker-compose exec -T api pytest -v  # Use -T to prevent TTY error
 
-      # Beende und entferne die Docker-Container
+      # Tear down the Docker Compose services
       - name: Tear down Docker Compose
         run: docker-compose down
