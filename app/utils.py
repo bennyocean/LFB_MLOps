@@ -1,3 +1,4 @@
+from fastapi import HTTPException
 import os
 import pymongo
 import joblib
@@ -8,19 +9,21 @@ import numpy as np
 
 load_dotenv()
 
-# Setup logging
-logging.basicConfig(filename='logs/app.log', level=logging.INFO)
-
 MONGO_URI = os.getenv("MONGO_URI")
 DATABASE_NAME = "lfb"
 COLLECTION_NAME = "lfb"
 
 def connect_to_mongo():
-    client = pymongo.MongoClient(MONGO_URI)
-    db = client[DATABASE_NAME]
-    collection = db[COLLECTION_NAME]
-    logging.info("Connected to MongoDB")
-    return collection
+    try:
+        client = pymongo.MongoClient(MONGO_URI)
+        db = client[DATABASE_NAME]
+        collection = db[COLLECTION_NAME]
+        logging.info("Connected to MongoDB")
+        return collection
+    except pymongo.errors.ConnectionFailure as e:
+        logging.error(f"Could not connect to MongoDB: {str(e)}")
+        raise HTTPException(status_code=500, detail="Database connection failed")
+
 
 def load_model_and_pca():
     model_path = os.path.join('model', 'model.pkl')
