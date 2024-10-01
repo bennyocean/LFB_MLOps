@@ -1,22 +1,16 @@
 import math
 from fastapi.testclient import TestClient
 from app.main import app
-import jwt
-from datetime import datetime, timedelta
-import os
-from app.utils import evaluate_model_on_test_set
-from unittest.mock import patch
 
 client = TestClient(app)
 
-SECRET_KEY = os.getenv("SECRET_KEY")
-ALGORITHM = os.getenv("ALGORITHM")
+# Admin user credentials
+admin_username = "admin"
+admin_password = "password"
 
-# Helper function to create a JWT token for testing
-def create_test_token(role="admin"):
-    expiration = datetime.now() + timedelta(hours=1)  
-    token = jwt.encode({"sub": "test_user", "role": role, "exp": expiration}, SECRET_KEY, ALGORITHM)
-    return token
+# Create access token
+token_response = client.post("/token", data={"username": admin_username, "password": admin_password})
+token = token_response.json()["access_token"]
 
 # Helper function to preprocess input data for testing (not needed for this specific test)
 def preprocess_input(incident_time, distance_to_station):
@@ -45,9 +39,6 @@ def encode_time(hour):
 ### Unit Test for Prediction Endpoint
 
 def test_prediction_endpoint_success():
-    # Create an admin token
-    token = create_test_token(role="admin")
-    
     # Send POST request to /predict with a valid token
     headers = {"Authorization": f"Bearer {token}"}
     response = client.post("/predict", headers=headers)
@@ -60,10 +51,7 @@ def test_prediction_endpoint_success():
     assert "predicted_response_time" in json_response
     assert "incidence_id" in json_response
 
-def test_prediction_endpoint_for_user():
-    # Create a user token
-    token = create_test_token(role="user")
-    
+def test_prediction_endpoint_for_user():    
     # Send POST request to /predict with a valid user token
     headers = {"Authorization": f"Bearer {token}"}
     response = client.post("/predict", headers=headers)
@@ -89,9 +77,6 @@ def test_prediction_endpoint_invalid_token():
 ### Unit Test for Evaluation Endpoint
 
 def test_evaluate_endpoint_success():
-    # Create an admin token
-    token = create_test_token(role="admin")
-
     # Send POST request to /evaluate with a valid token
     headers = {"Authorization": f"Bearer {token}"}
     response = client.post("/evaluate", headers=headers)
@@ -106,7 +91,6 @@ def test_evaluate_endpoint_success():
 
 def test_evaluate_endpoint_for_user():
     # Create a user token
-    token = create_test_token(role="user")
 
     # Send POST request to /evaluate with a valid user token
     headers = {"Authorization": f"Bearer {token}"}
