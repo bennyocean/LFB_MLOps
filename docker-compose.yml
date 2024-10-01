@@ -1,0 +1,104 @@
+version: '3.12'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: lfb_api
+    ports:
+      - "8000:8000"
+    environment:
+      SECRET_KEY: ${SECRET_KEY}
+      ALGORITHM: ${ALGORITHM}
+      PYTHONPATH: ${PYTHONPATH}
+      MONGO_URI: ${MONGO_URI}
+    depends_on:
+      - mongodb
+    networks:
+      - lfb_network
+
+  mongodb:
+    image: mongo:4.4
+    container_name: mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
+    ports:
+      - "27017:27017"
+    networks:
+      - lfb_network
+    command: ["mongod", "--auth", "--bind_ip_all", "--port", "27017"]
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  airflow-webserver:
+    image: apache/airflow:2.10.2
+    container_name: airflow
+    restart: always
+    user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor  
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////home/airflow/airflow.db
+      - AIRFLOW_CONN_MONGO_CONN=${MONGO_URI}
+      - AIRFLOW__CORE__FERNET_KEY=${FERNET_KEY}
+      - PYTHONPATH=/opt/airflow/app:/opt/airflow
+      - AIRFLOW_UID=${AIRFLOW_UID}
+      - AIRFLOW_GID=${AIRFLOW_GID}
+    ports:
+      - "8080:8080"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - lfb_network
+    volumes:
+      - airflow_dags:/opt/airflow/dags/predict_model_dag.py
+      - airflow_logs:/opt/airflow/logs
+      - airflow_config:/opt/airflow/config
+      - airflow_plugins:/opt/airflow/plugins
+      - airflow_db:/home/airflow
+      - ./app:/opt/airflow/app
+    entrypoint: ["bash", "-c", "airflow db migrate && airflow users create --username admin --firstname Admin --lastname User --role Admin --email admin@example.com --password psw && airflow webserver"]
+
+  airflow-scheduler:
+    image: apache/airflow:2.10.2
+    container_name: airflow_scheduler
+    restart: always
+    user: "${AIRFLOW_UID:-50000}:${AIRFLOW_GID:-50000}"
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=SequentialExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////home/airflow/airflow.db
+      - AIRFLOW_CONN_MONGO_CONN=${MONGO_URI}
+      - AIRFLOW__CORE__FERNET_KEY=${FERNET_KEY}
+      - PYTHONPATH=/opt/airflow/app:/opt/airflow
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - lfb_network
+    volumes:
+      - airflow_dags:/opt/airflow/dags/predict_model_dag.py
+      - airflow_logs:/opt/airflow/logs
+      - airflow_config:/opt/airflow/config
+      - airflow_plugins:/opt/airflow/plugins
+      - airflow_db:/home/airflow
+      - ./app:/opt/airflow/app
+    entrypoint: ["bash", "-c", "airflow db migrate && airflow scheduler"]
+
+
+networks:
+  lfb_network:
+    driver: bridge
+
+volumes:
+  airflow_dags:
+  airflow_logs:
+  airflow_config:
+  airflow_plugins:
+  airflow_db:
