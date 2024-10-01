@@ -10,12 +10,13 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 @router.post("/evaluate", tags=["Model Evaluation"])
 async def evaluate_model(token: str = Depends(oauth2_scheme)):
     # Überprüfen des Tokens und Abrufen des Benutzers
-    current_user = verify_token(token)
+    current_user = verify_token(token, required_role="admin")
 
     try:
         # Bewertung des Modells auf dem Testdatensatz
         accuracy = evaluate_model_on_test_set()
         return {
+            "user": current_user,
             "evaluation_result": {
                 "accuracy": accuracy
             }
