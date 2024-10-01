@@ -1,6 +1,5 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
-from airflow.providers.mongo.hooks.mongo import MongoHook
 from airflow.hooks.base import BaseHook
 from datetime import datetime, timedelta
 import joblib
@@ -125,11 +124,15 @@ with DAG('predict_model_dag',
 
     # Store predictions in MongoDB task
     def store_predictions_in_mongodb(ti):
-        mongo_hook = MongoHook(mongo_conn_id='mongo_conn') 
-        client = mongo_hook.get_conn()
+        mongo_uri = os.getenv('MONGO_URI')
+
+        if not mongo_uri:
+            raise ValueError("MONGO_URI environment variable not set.")
+
+        client = MongoClient(mongo_uri)
 
         db = client['lfb']
-        collection = db['predictions']
+        collection = db['lfb']
 
         # Fetch the predictions from XCom
         predictions = ti.xcom_pull(task_ids='make_predictions_task')
