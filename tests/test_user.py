@@ -37,12 +37,12 @@ def test_token_generation(setup_test_db):
     print(f"Generated Token: {token}")
     assert "access_token" in response.json()
 
+# Login as admin to get token
+token_response = client.post("/token", data={"username": admin_username, "password": admin_password})
+access_token = token_response.json()["access_token"]
+
 # Test for creating a user (POST /users)
 def test_create_user(setup_test_db):
-    # Login as admin to get token
-    token_response = client.post("/token", data={"username": admin_username, "password": admin_password})
-    access_token = token_response.json()["access_token"]
-
     # Create a new user (hashed_password is required by the schema, role must also be provided)
     new_user = {
         "username": "testuser_pytest_2",
@@ -62,10 +62,6 @@ def test_create_user(setup_test_db):
 
 # Test for getting users (GET /users)
 def test_get_users(setup_test_db):
-    # Login as admin to get token
-    token_response = client.post("/token", data={"username": admin_username, "password": admin_password})
-    access_token = token_response.json()["access_token"]
-
     # Get the list of users
     headers = {"Authorization": f"Bearer {access_token}"}
     response = client.get("/users", headers=headers)
@@ -78,10 +74,6 @@ def test_get_users(setup_test_db):
 
 # Test for reading a specific user (GET /users/{user_id})
 def test_read_user(setup_test_db):
-    # Login as admin to get token
-    token_response = client.post("/token", data={"username": admin_username, "password": admin_password})
-    access_token = token_response.json()["access_token"]
-
     # Retry fetching the user a few times if it's not found immediately
     retries = 3
     for _ in range(retries):
@@ -104,12 +96,7 @@ def test_read_user(setup_test_db):
     assert response.json()["username"] == "testuser_pytest"
 
 # Test for updating a user (PUT /users/{user_id})
-# Test for updating a user (PUT /users/{user_id})
 def test_update_user(setup_test_db):
-    # Login as admin to get token
-    token_response = client.post("/token", data={"username": admin_username, "password": admin_password})
-    access_token = token_response.json()["access_token"]
-
     # Fetch the user first
     test_user = db.users.find_one({"username": "testuser_pytest"})
     if not test_user:
@@ -140,12 +127,7 @@ def test_update_user(setup_test_db):
 
 
 # Test for deleting a user (DELETE /users/{user_id})
-# Test for deleting a user (DELETE /users/{user_id})
 def test_delete_user(setup_test_db):
-    # Login as admin to get token
-    token_response = client.post("/token", data={"username": admin_username, "password": admin_password})
-    access_token = token_response.json()["access_token"]
-
     # Fetch the updated user first (we will first check if the update happened correctly)
     print("Fetching updated user before deletion...")
     test_user = db.users.find_one({"username": "user_pytest_updated"})
