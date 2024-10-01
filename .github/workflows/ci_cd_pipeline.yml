@@ -41,7 +41,7 @@ jobs:
       # Führe die Pytest-Tests aus
       - name: Run Pytest
         run: |
-          docker-compose exec -T lfb_api pytest -v
+          docker-compose exec api pytest -v
 
       # Beende und entferne die Docker-Container
       - name: Tear down Docker Compose
