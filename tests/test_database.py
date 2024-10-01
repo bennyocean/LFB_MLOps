@@ -12,6 +12,10 @@ client = TestClient(app)
 user_username = "user"
 user_password = "password"
 
+token_response = client.post("/token", data={"username": user_username, "password": user_password})
+assert token_response.status_code == 200, f"Error: {token_response.json()}"
+access_token = token_response.json()["access_token"]
+
 # Setup for MongoDB ping and logging collections
 @pytest.fixture
 def setup_mongodb():
@@ -41,11 +45,6 @@ def test_log_collection_names(setup_mongodb):
 
 # Test 3: Read one data entry from a collection (with user credentials)
 def test_read_one_data_entry():
-    # Login as a regular user to get the token
-    token_response = client.post("/token", data={"username": user_username, "password": user_password})
-    assert token_response.status_code == 200, f"Error: {token_response.json()}"
-    access_token = token_response.json()["access_token"]
-
     # Fetch entry from the lfb collection
     headers = {"Authorization": f"Bearer {access_token}"}
     response = client.get("/data", headers=headers)  # Assuming the read endpoint is "/data/one"
@@ -60,12 +59,7 @@ def test_read_one_data_entry():
 # Test 4: Add new data entry and verify addition (with user credentials)
 
 def test_add_new_data_entry():
-    # Login as a regular user to get the token
-    token_response = client.post("/token", data={"username": user_username, "password": user_password})
-    assert token_response.status_code == 200, f"Error: {token_response.json()}"
-    access_token = token_response.json()["access_token"]
-
-    # Add a new data entry (assuming the add endpoint is "/data/add-sample")
+    # Add a new data entry
     headers = {"Authorization": f"Bearer {access_token}"}
     response = client.post("/data/add", headers=headers)
 
@@ -77,9 +71,6 @@ def test_add_new_data_entry():
     assert "inserted_ids" in response.json(), "Data insertion failed"
     inserted_ids = response.json()["inserted_ids"]
     assert len(inserted_ids) > 0, "No entries were added"
-
-    # Adding delay to allow MongoDB to propagate the change
-    sleep(1)  # Optional: Increase if needed
 
     # Verify that the entry was added directly in MongoDB
     sample_id = inserted_ids[0]
