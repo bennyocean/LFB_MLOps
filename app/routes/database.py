@@ -59,9 +59,8 @@ async def add_data(token: str = Depends(oauth2_scheme)):
     current_user = verify_token(token)  # Verify the JWT token, but don't restrict by role
 
     try:
-        # Sample 5 random entries from the lfb.lfb collection
-        all_entries = list(db.lfb.find())
-        sampled_entries = random.sample(all_entries, 5)
+        # Fetch the last 5 entries from the lfb.lfb collection (you can change 5 to any other number)
+        sampled_entries = list(db.lfb.find().sort([("_id", -1)]).limit(5))  # Sort by _id in descending order to get the last entries
 
         # Create new ObjectIds for the sampled entries to avoid duplicates
         for entry in sampled_entries:
@@ -75,4 +74,4 @@ async def add_data(token: str = Depends(oauth2_scheme)):
 
         return {"inserted_ids": inserted_ids, "message": "Sampled data added successfully"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error sampling or inserting data: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error fetching or inserting data: {str(e)}")
