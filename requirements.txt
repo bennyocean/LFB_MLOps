@@ -1,7 +1,6 @@
 fastapi==0.112.2
 uvicorn==0.20.0
 pydantic==2.8.2
-pymongo==4.9.1
 numpy==1.26.4
 pandas==2.2.2
 scikit-learn==1.5.1
