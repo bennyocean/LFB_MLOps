@@ -1,24 +1,3 @@
-'''
-import jwt
-from fastapi import HTTPException
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
-
-SECRET_KEY = os.getenv("SECRET_KEY")
-
-def verify_token(token: str):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        return payload
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-'''
-
-# test
 from datetime import datetime, timedelta
 from jose import jwt, JWTError
 from passlib.context import CryptContext
@@ -57,7 +36,7 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     return encoded_jwt
 
 # Verify the token
-def verify_token(token: str):
+def verify_token(token: str, required_role: str = None):
     credentials_exception = HTTPException(
         status_code=401,
         detail="Could not validate credentials",
@@ -69,6 +48,9 @@ def verify_token(token: str):
         role: str = payload.get("role")
         if username is None or role is None:
             raise credentials_exception
+        if required_role and role != required_role:
+            raise HTTPException(status_code=403, detail="Not enough privileges")
         return {"username": username, "role": role}
     except JWTError:
         raise credentials_exception
+
