@@ -9,8 +9,9 @@ import numpy as np
 from app.features import FEATURE_COLUMNS
 from dotenv import load_dotenv
 import logging
-import sys
 from pymongo import MongoClient
+from bson import ObjectId
+import random
 
 # Load environment variables
 load_dotenv()
@@ -23,76 +24,56 @@ default_args = {
     'start_date': datetime(2023, 9, 25),
 }
 
-def ensure_mongo_connection():
-    from airflow.models import Connection
-    from airflow import settings
-
-    session = settings.Session()
-    mongo_conn = session.query(Connection).filter(Connection.conn_id == 'mongo_conn').first()
-    
-    if mongo_conn and mongo_conn.conn_type != 'mongo':
-        mongo_conn.conn_type = 'mongo'
-        session.add(mongo_conn)
-        session.commit()
-        logging.warning("Mongo connection type updated to 'mongo'.")
-    else:
-        logging.warning(f"Mongo connection is already set correctly or does not exist. Conn_type: {mongo_conn.conn_type if mongo_conn else 'None'}")
-    logging.warning(f"conn_type = {mongo_conn.conn_type if mongo_conn else 'None'}")
-    session.close()
-
 # Define the DAG
 with DAG('predict_model_dag',
          default_args=default_args,
          schedule='@daily',
          catchup=False) as dag:
     
-    ensure_mongo_conn_task = PythonOperator(
-        task_id='ensure_mongo_conn_task',
-        python_callable=ensure_mongo_connection
-)
-
-    # Test MongoDB connection task
-    def test_mongo_connection():
-        try:
-            connection = BaseHook.get_connection('mongo_conn')
-            print(f"Connection URI: {connection.get_uri()}")
-            print("MongoDB connection works correctly.")
-        except Exception as e:
-            print(f"Failed to connect to MongoDB: {e}")
-
     # Load model and PCA task
     def load_model(ti):
-        dag_file_directory = os.path.dirname(os.path.realpath(__file__))
-        model_path = os.path.join(dag_file_directory, '../../model/model.pkl')
-        pca_path = os.path.join(dag_file_directory, '../../model/pca.pkl')
+        model_path = "/opt/airflow/model/model.pkl"
+        pca_path = "/opt/airflow/model/pca.pkl"
 
-        model = joblib.load(model_path)
-        pca = joblib.load(pca_path)
+        # Push the paths to XCom
+        ti.xcom_push(key='model_path', value=model_path)
+        ti.xcom_push(key='pca_path', value=pca_path)
 
-        # Push model and PCA to XCom for later use
-        ti.xcom_push(key='model', value=model)
-        ti.xcom_push(key='pca', value=pca)
 
-    # Fetch data from MongoDB task
+    load_model_task = PythonOperator(
+        task_id='load_model_task',
+        python_callable=load_model
+    )
+
+    # Fetch data from MongoDB
     def fetch_data_from_mongodb():
         try:
-            mongo_uri = os.getenv('MONGO_URI')
+            # Fetch MongoDB connection details from Airflow connections
+            connection = BaseHook.get_connection('mongo_conn')  
+            mongo_uri = connection.get_uri()
 
             if not mongo_uri:
-                raise ValueError("MONGO_URI environment variable not set.")
+                raise ValueError("MongoDB URI not found in Airflow connection.")
 
+            # Connect to MongoDB and fetch data
             client = MongoClient(mongo_uri)
-
             db = client['lfb']
             collection = db['lfb']
-
             data = pd.DataFrame(list(collection.find()))
+
+            if '_id' in data.columns:
+                data['_id'] = data['_id'].apply(lambda x: str(x) if isinstance(x, ObjectId) else x)
+
             return data
 
         except Exception as e:
             print(f"Error connecting to MongoDB: {e}")
             raise
 
+    fetch_data_task = PythonOperator(
+        task_id='fetch_data_task',
+        python_callable=fetch_data_from_mongodb
+    )
 
     # Preprocess data task
     def preprocess_data(data, pca):
@@ -108,65 +89,57 @@ with DAG('predict_model_dag',
         transformed_data = pca.transform(data) if pca else data
         return transformed_data
 
-    # Make predictions task
     def make_predictions(ti):
-        # Pull the model and PCA from XCom
-        model = ti.xcom_pull(task_ids='load_model_task', key='model')
-        pca = ti.xcom_pull(task_ids='load_model_task', key='pca')
+        # Pull the model and PCA paths from XCom
+        model_path = ti.xcom_pull(task_ids='load_model_task', key='model_path')
+        pca_path = ti.xcom_pull(task_ids='load_model_task', key='pca_path')
+
+        # Load the actual model and PCA objects using joblib
+        model = joblib.load(model_path)
+        pca = joblib.load(pca_path)
+
+        # Fetch data from XCom
         raw_data = ti.xcom_pull(task_ids='fetch_data_task')
 
-        # Preprocess the raw data
-        processed_data = preprocess_data(raw_data, pca)
+        if 'ResponseTimeBinary' in raw_data.columns:
+            target_value = raw_data['ResponseTimeBinary'].values[0]
+        else:
+            target_value = None
 
-        # Make predictions using the model
-        predictions = model.predict(processed_data)
-        return predictions
+        random_row = raw_data.sample(n=1)
+        processed_data = preprocess_data(random_row, pca)
+        prediction = model.predict(processed_data)[0]  
 
-    # Store predictions in MongoDB task
-    def store_predictions_in_mongodb(ti):
-        mongo_uri = os.getenv('MONGO_URI')
+        if target_value is not None:
+            comparison_result = (prediction == target_value)
+            print(f"Prediction: {prediction}, Actual: {target_value}, Match: {comparison_result}")
+        else:
+            print("No target value to compare.")
 
-        if not mongo_uri:
-            raise ValueError("MONGO_URI environment variable not set.")
-
+        # Connect to MongoDB
+        connection = BaseHook.get_connection('mongo_conn')
+        mongo_uri = connection.get_uri()
         client = MongoClient(mongo_uri)
-
         db = client['lfb']
-        collection = db['lfb']
+        collection = db['predictions']
 
-        # Fetch the predictions from XCom
-        predictions = ti.xcom_pull(task_ids='make_predictions_task')
-        prediction_docs = [{"prediction": pred, "timestamp": datetime.now()} for pred in predictions]
-        
-        # Insert the predictions into MongoDB
-        collection.insert_many(prediction_docs)
-        print(f"Inserted {len(prediction_docs)} predictions into MongoDB.")
+        # Prepare document to insert into MongoDB
+        prediction_doc = {
+            "prediction": int(prediction),
+            "input_data": random_row.to_dict(orient='records')[0],  
+            "timestamp": datetime.now(),
+            "actual_target": int(target_value) if target_value is not None else None,  
+            "match": bool(comparison_result) if target_value is not None else None
+        }
 
-    # Define the tasks in the DAG
-    test_mongo_conn_task = PythonOperator(
-        task_id='test_mongo_conn_task',
-        python_callable=test_mongo_connection
-    )
+        # Insert the prediction into MongoDB
+        collection.insert_one(prediction_doc)
 
-    load_model_task = PythonOperator(
-        task_id='load_model_task',
-        python_callable=load_model
-    )
-
-    fetch_data_task = PythonOperator(
-        task_id='fetch_data_task',
-        python_callable=fetch_data_from_mongodb
-    )
 
     make_predictions_task = PythonOperator(
         task_id='make_predictions_task',
         python_callable=make_predictions
     )
 
-    store_predictions_task = PythonOperator(
-        task_id='store_predictions_task',
-        python_callable=store_predictions_in_mongodb
-    )
-
     # Define task dependencies
-    ensure_mongo_conn_task >> test_mongo_conn_task >> load_model_task >> fetch_data_task >> make_predictions_task >> store_predictions_task
+    load_model_task >> fetch_data_task >> make_predictions_task

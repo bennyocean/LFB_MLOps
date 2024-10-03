@@ -19,10 +19,6 @@ COPY requirements.txt .
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
-# install airflow dependencies
-RUN pip install apache-airflow-providers-mongo joblib
-RUN pip install joblib
-
 # Environment variable to enable logging
 ENV LOG=1
 
