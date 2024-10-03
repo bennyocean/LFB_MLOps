@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from app.utils import evaluate_model_on_test_set
+from app.utils import evaluate_model_on_test_set, log_evaluation_result
 from app.auth import verify_token
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 
@@ -15,6 +15,10 @@ async def evaluate_model(token: str = Depends(oauth2_scheme)):
     try:
         # Bewertung des Modells auf dem Testdatensatz
         accuracy = evaluate_model_on_test_set()
+
+        # Logge die Accuracy ins evaluation.log
+        log_evaluation_result(accuracy)
+
         return {
             "user": current_user,
             "evaluation_result": {

@@ -6,7 +6,13 @@ from app.routes import prediction, evaluation, database, user
 app = FastAPI()
 
 # logs
-logging.basicConfig(filename='logs/app.log', level=logging.INFO)
+eval_handler = logging.FileHandler('logs/evaluation.log')
+eval_handler.setLevel(logging.INFO)
+formatter = logging.Formatter('%(asctime)s - %(message)s')
+eval_handler.setFormatter(formatter)
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logger.addHandler(eval_handler)
 
 # load trained model
 with open('model/model.pkl', 'rb') as f:

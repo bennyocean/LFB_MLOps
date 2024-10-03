@@ -50,6 +50,10 @@ def fetch_sample_data(collection):
     else:
         logging.warning(f"No records found in MongoDB")
         return [None]  
+    
+def fetch_sample_data_eva(collection, limit=10):
+    sample_data = collection.find().limit(limit)
+    return list(sample_data)
 
 def preprocess_test_data(raw_test_data, pca_model):
     features = [
@@ -70,7 +74,7 @@ def preprocess_test_data(raw_test_data, pca_model):
 
 def evaluate_model_on_test_set():
     collection = connect_to_mongo()
-    raw_test_data = fetch_sample_data(collection)
+    raw_test_data = fetch_sample_data_eva(collection)
     
     model, pca = load_model_and_pca()
     
@@ -85,8 +89,6 @@ def evaluate_model_on_test_set():
     return accuracy
 
 def log_evaluation_result(accuracy):
-    logging.basicConfig(filename='logs/evaluation.log', level=logging.INFO, 
-                        format='%(asctime)s - %(message)s')
     logging.info(f'Model evaluation completed. Accuracy: {accuracy:.4f}')
 
 def log_info(message):
