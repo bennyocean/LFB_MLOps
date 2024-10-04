@@ -19,3 +19,4 @@ docker==7.1.0
 pyjwt==2.9.0
 python-multipart==0.0.10
 python-jose==3.3.0
+dill==0.3.9

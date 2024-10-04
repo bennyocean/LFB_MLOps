@@ -18,13 +18,28 @@ jobs:
       ALGORITHM: ${{ secrets.ALGORITHM }}
       PYTHONPATH: "."
       MONGO_URI: ${{ secrets.MONGO_URI }}
+      AIRFLOW_CONN_MONGO_CONN: ${{ secrets.AIRFLOW_CONN_MONGO_CONN }}
       MONGO_INITDB_ROOT_USERNAME: ${{ secrets.MONGO_INITDB_ROOT_USERNAME }}
       MONGO_INITDB_ROOT_PASSWORD: ${{ secrets.MONGO_INITDB_ROOT_PASSWORD }}
+      AIRFLOW__CORE__FERNET_KEY: ${{ secrets.AIRFLOW__CORE__FERNET_KEY }}
+      FERNET_KEY: ${{ secrets.FERNET_KEY }}
+      AIRFLOW_HOME: "/opt/airflow"
 
     steps:
       # Check out the code from the repository
       - name: Check out code
         uses: actions/checkout@v3
+
+      # Install Flake8 for Linting
+      - name: Install Flake8
+        run: |
+          pip install flake8     
+
+      #Lint the code with Flake8
+      - name: Lint code with Flake8
+        run: |
+          flake8 .      
+        continue-on-error: true  # even if flake8 is unhappy, next steps will start
 
       # Install Docker and Docker Compose
       - name: Install Docker and Docker Compose
