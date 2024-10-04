@@ -43,8 +43,6 @@ services:
       dockerfile: Dockerfile.airflow  
     container_name: airflow
     restart: always
-    env_file:
-      - .env
     environment:
       - AIRFLOW__CORE__EXECUTOR=SequentialExecutor  
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////home/airflow/airflow.db
