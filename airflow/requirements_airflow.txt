@@ -1,0 +1,10 @@
+joblib
+pandas
+numpy
+scikit-learn
+xgboost
+python-dotenv
+pymongo
+apache-airflow-providers-mongo
+imbalanced-learn==0.12.3
+imblearn==0.0

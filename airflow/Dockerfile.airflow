@@ -2,8 +2,26 @@ FROM apache/airflow:2.10.2
 
 USER root
 
-RUN apt-get update && sudo apt-get install gnupg curl
+# Install necessary system dependencies
+RUN apt-get update && apt-get install -y gnupg curl
 
 USER airflow
 
-RUN pip install --no-cache-dir joblib pandas numpy scikit-learn xgboost python-dotenv pymongo apache-airflow-providers-mongo
+# Copy requirements_airflow.txt to the container
+COPY requirements_airflow.txt .
+
+# Print requirements_airflow.txt to verify it is copied correctly
+RUN echo "=== Printing requirements_airflow.txt ===" && cat requirements_airflow.txt
+
+# Install Python dependencies from requirements_airflow.txt
+RUN echo "=== Installing Python packages for airflow user ===" && \
+    pip install --user --no-cache-dir -r requirements_airflow.txt && \
+    echo "=== Finished installing Python packages ===" || \
+    echo "=== Failed to install Python packages ==="
+
+# Separate package check without breaking the build if it fails
+RUN echo "=== Checking installed packages ===" && pip list && \
+    echo "=== Checking for imbalanced-learn ===" && pip show imbalanced-learn || echo "imbalanced-learn not found"
+
+# Optionally: Show all installed packages
+RUN echo "=== Full list of installed packages ===" && pip list

@@ -3,15 +3,11 @@ from airflow.operators.python import PythonOperator
 from airflow.hooks.base import BaseHook
 from datetime import datetime, timedelta
 import joblib
-import os
 import pandas as pd
-import numpy as np
 from app.features import FEATURE_COLUMNS
 from dotenv import load_dotenv
-import logging
 from pymongo import MongoClient
 from bson import ObjectId
-import random
 
 # Load environment variables
 load_dotenv()

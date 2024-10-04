@@ -1,4 +1,4 @@
-version: '3.13'
+version: '3.14'
 
 services:
   api:
@@ -51,8 +51,6 @@ services:
       - AIRFLOW_CONN_MONGO_CONN=${MONGO_URI}
       - AIRFLOW__CORE__FERNET_KEY=${FERNET_KEY}
       - PYTHONPATH=/opt/airflow/app:/opt/airflow:/home/airflow/.local/lib/python3.12/site-packages
-      - AIRFLOW_UID=${AIRFLOW_UID}
-      - AIRFLOW_GID=${AIRFLOW_GID}
     ports:
       - "8080:8080"
     networks:
@@ -60,11 +58,10 @@ services:
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - airflow_logs:/opt/airflow/logs
-      - airflow_config:/opt/airflow/config
-      - airflow_plugins:/opt/airflow/plugins
       - airflow_db:/home/airflow
       - ./app:/opt/airflow/app
       - ./model:/opt/airflow/model
+      - ./airflow/airflow.cfg:/opt/airflow/airflow.cfg
     entrypoint: ["bash", "-c", "airflow db migrate && airflow users create --username admin --firstname Admin --lastname User --role Admin --email admin@example.com --password psw && airflow webserver"]
 
   airflow-scheduler:
@@ -84,11 +81,10 @@ services:
     volumes:
       - ./airflow/dags:/opt/airflow/dags
       - airflow_logs:/opt/airflow/logs
-      - airflow_config:/opt/airflow/config
-      - airflow_plugins:/opt/airflow/plugins
       - airflow_db:/home/airflow
       - ./app:/opt/airflow/app
       - ./model:/opt/airflow/model
+      - ./airflow/airflow.cfg:/opt/airflow/airflow.cfg
     entrypoint: ["bash", "-c", "airflow db migrate && airflow scheduler"]
 
 
@@ -99,6 +95,4 @@ networks:
 volumes:
   dags:
   airflow_logs:
-  airflow_config:
-  airflow_plugins:
   airflow_db:
