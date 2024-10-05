@@ -24,6 +24,7 @@ jobs:
       AIRFLOW__CORE__FERNET_KEY: ${{ secrets.AIRFLOW__CORE__FERNET_KEY }}
       FERNET_KEY: ${{ secrets.FERNET_KEY }}
       AIRFLOW_HOME: "/opt/airflow"
+      GRAFANA_ADMIN_PASSWORD: ${{ secrets.GRAFANA_ADMIN_PASSWORD }}
 
     steps:
       # Check out the code from the repository
