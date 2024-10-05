@@ -20,3 +20,4 @@ pyjwt==2.9.0
 python-multipart==0.0.10
 python-jose==3.3.0
 dill==0.3.9
+prometheus-fastapi-instrumentator==7.0.0
