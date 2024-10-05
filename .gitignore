@@ -1,6 +1,6 @@
 .env
 mongodb.txt
-/data/
+/data/database.parquet
 **/.ipynb_checkpoints
 /env/
 /venv/
