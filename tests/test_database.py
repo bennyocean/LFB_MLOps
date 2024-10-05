@@ -57,34 +57,47 @@ def test_read_one_data_entry():
     assert len(response.json()) > 0, "No data entries returned"
 
 # Test 4: Add new data entry and verify addition (with user credentials)
-
 def test_add_new_data_entry():
-    # Add a new data entry
+    # Fetch a sample entry from the lfb collection (assuming the endpoint returns a list)
     headers = {"Authorization": f"Bearer {access_token}"}
-    response = client.post("/data/add", headers=headers)
+    fetch_response = client.get("/data", headers=headers)  # Assuming the read endpoint is "/data"
+    
+    # Debugging: Log fetch response
+    print(f"Fetched Data Entries Response: {fetch_response.json()}")
+    
+    # Ensure the response contains at least one entry
+    assert fetch_response.status_code == 200, f"Error: {fetch_response.json()}"
+    fetched_entries = fetch_response.json()
+    assert len(fetched_entries) > 0, "No data entries returned"
+    
+    # Take the first entry from the list and remove '_id'
+    new_data_entry = fetched_entries[0]
+    new_data_entry.pop('_id', None)  # Remove the _id to simulate new data insertion
+    
+    # Debugging: Log modified data entry
+    print(f"New Data Entry (without _id): {new_data_entry}")
 
-    # Debugging: Log response
-    print(f"Add Data Entry Response: {response.json()}")
+    # Add the new data entry to the database via the /data/add endpoint
+    add_response = client.post("/data/add", headers=headers, json=new_data_entry)
+
+    # Debugging: Log response from adding new data
+    print(f"Add Data Entry Response: {add_response.json()}")
 
     # Ensure that the data was added successfully
-    assert response.status_code == 200, f"Error: {response.json()}"
-    assert "inserted_ids" in response.json(), "Data insertion failed"
-    inserted_ids = response.json()["inserted_ids"]
-    assert len(inserted_ids) > 0, "No entries were added"
+    assert add_response.status_code == 200, f"Error: {add_response.json()}"
+    assert "inserted_id" in add_response.json(), "Data insertion failed"
+    inserted_id = add_response.json()["inserted_id"]
+    assert len(inserted_id) > 0, "No entries were added"
 
     # Verify that the entry was added directly in MongoDB
-    sample_id = inserted_ids[0]
-    print(f"Sample ID inserted: {sample_id}")
+    print(f"Sample ID inserted: {inserted_id}")
     
-    object_id = bson.ObjectId(sample_id)
+    object_id = bson.ObjectId(inserted_id)
     db_entry = db.lfb.find_one({"_id": object_id})
     assert db_entry is not None, "Data was not inserted into MongoDB"
     print(f"Data in MongoDB: {db_entry}")
 
     # Verify the entry was added by fetching one of the inserted ids using the API
-    verify_response = client.get(f"/data/{sample_id}", headers=headers)
+    verify_response = client.get(f"/data/{inserted_id}", headers=headers)
     assert verify_response.status_code == 200, f"Error: {verify_response.json()}"
     print(f"Verified Inserted Data via API: {verify_response.json()}")
-
-
-
