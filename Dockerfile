@@ -10,6 +10,7 @@ WORKDIR /home
 COPY ./app /home/app
 COPY ./tests /home/tests
 COPY ./model /home/model
+COPY ./data/sample_predict_data.json /home/data/sample_predict_data.json
 
 # Ensure the logs directory exists
 RUN mkdir -p /home/logs
