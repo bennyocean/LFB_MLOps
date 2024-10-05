@@ -9,10 +9,11 @@ services:
     ports:
       - "8000:8000"
     environment:
-      SECRET_KEY: ${SECRET_KEY}
-      ALGORITHM: ${ALGORITHM}
-      PYTHONPATH: ${PYTHONPATH}
-      MONGO_URI: ${MONGO_URI}
+      - SECRET_KEY=${SECRET_KEY}
+      - ALGORITHM=${ALGORITHM}
+      - PYTHONPATH=${PYTHONPATH}
+      - MONGO_URI=${MONGO_URI}
+      - PROMETHEUS_METRICS=True
     depends_on:
       - mongodb
     networks:
@@ -84,6 +85,26 @@ services:
       - ./model:/opt/airflow/model
       - ./airflow/airflow.cfg:/opt/airflow/airflow.cfg
     entrypoint: ["bash", "-c", "airflow db migrate && airflow scheduler"]
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - lfb_network
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD}
+    volumes:
+      - ./grafana:/var/lib/grafana
+    networks:
+      - lfb_network
 
 
 networks:
