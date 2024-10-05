@@ -10,3 +10,4 @@ __pycache__/
 airflow.db
 /logs/
 /airflow/logs/
+grafana/
