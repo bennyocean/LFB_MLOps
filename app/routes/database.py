@@ -1,9 +1,10 @@
 from bson import ObjectId
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Body
 from fastapi.security import OAuth2PasswordBearer
 from app.db import db
 from app.auth import verify_token
-import random
+from typing import Optional, Dict
+
 
 router = APIRouter()
 
@@ -15,22 +16,23 @@ def object_id_to_str(doc):
         doc['_id'] = str(doc['_id'])
     return doc
 
-# Endpoint to read data from lfb.lfb with authorization (no role restriction)
+
 @router.get("/data", tags=["MongoDB"])
 async def read_data(token: str = Depends(oauth2_scheme)):
     current_user = verify_token(token)  # Verify the JWT token, but don't restrict by role
 
     try:
-        data = list(db.lfb.find().limit(15))  # Read 15 documents for now
+        data = list(db.lfb.find().limit(5))  # Read 15 documents for now
         if not data:
             raise HTTPException(status_code=404, detail="No data found in lfb.lfb")
         
         # Convert ObjectId to string for each document
         data = [object_id_to_str(doc) for doc in data]
         
-        return {"data": data}
+        return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @router.get("/data/{sample_id}", tags=["MongoDB"])
 async def get_data(sample_id: str, token: str = Depends(oauth2_scheme)):
@@ -53,25 +55,32 @@ async def get_data(sample_id: str, token: str = Depends(oauth2_scheme)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error fetching data: {str(e)}")
 
-# Endpoint to add new data by simulating 5 samples with authorization (no role restriction)
+
 @router.post("/data/add", tags=["MongoDB"])
-async def add_data(token: str = Depends(oauth2_scheme)):
+async def add_data(
+    token: str = Depends(oauth2_scheme),
+    modified_data: Dict = Body(...)
+):
+    """
+    Insert the modified data as a new entry in MongoDB.
+    """
     current_user = verify_token(token)  # Verify the JWT token, but don't restrict by role
 
     try:
-        # Fetch the last 5 entries from the lfb.lfb collection (you can change 5 to any other number)
-        sampled_entries = list(db.lfb.find().sort([("_id", -1)]).limit(5))  # Sort by _id in descending order to get the last entries
+        # Ensure that the _id is not present in the modified data to avoid conflicts with MongoDB
+        if "_id" in modified_data:
+            del modified_data["_id"]  # Remove the _id field if present
 
-        # Create new ObjectIds for the sampled entries to avoid duplicates
-        for entry in sampled_entries:
-            entry['_id'] = ObjectId()  # Assign a new ObjectId to each entry
+        # Assign a new ObjectId to the new entry
+        modified_data["_id"] = ObjectId()
 
-        # Insert the sampled entries as new data
-        result = db.lfb.insert_many(sampled_entries)
+        # Insert the modified entry as new data into MongoDB
+        result = db.lfb.insert_one(modified_data)
 
-        # Convert ObjectId to string for each inserted document
-        inserted_ids = [str(id_) for id_ in result.inserted_ids]
+        # Return the inserted data and the new ObjectId (convert ObjectId to string)
+        inserted_data = object_id_to_str(modified_data)
 
-        return {"inserted_ids": inserted_ids, "message": "Sampled data added successfully"}
+        return {"inserted_id": str(result.inserted_id), "message": "New data added successfully", "modified_data": inserted_data}
+
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching or inserting data: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error inserting data: {str(e)}")
