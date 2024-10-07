@@ -22,8 +22,8 @@ def store_model_metrics(ti):
     mongo_uri = connection.get_uri()
 
     client = MongoClient(mongo_uri)
-    db_name = 'lfb' 
-    collection_name = 'lfb'  
+    db_name = 'lfb'
+    collection_name = 'lfb'
     db = client[db_name]
     collection = db[collection_name]
 
@@ -39,8 +39,8 @@ def store_model_metrics(ti):
 
     missing_X = X_test.isna().sum()
     missing_y = y_test.isna().sum()
-    logging.info(f"Missing values in feature columns (X_test): \n{missing_X[missing_X > 0]}")
-    logging.info(f"Missing values in target variable (y_test): {missing_y}")
+    logging.info(f"Missing values (X_test): \n{missing_X[missing_X > 0]}")
+    logging.info(f"Missing values (y_test): {missing_y}")
 
     combined = pd.concat([X_test, y_test], axis=1)
     combined_cleaned = combined.dropna()
@@ -67,7 +67,7 @@ def store_model_metrics(ti):
     accuracy = accuracy_score(y_resampled, y_pred)
 
     metrics = {
-        "model_name": "voting_classifier_hard",  
+        "model_name": "voting_classifier_hard",
         "precision": precision,
         "recall": recall,
         "f1_score": f1,

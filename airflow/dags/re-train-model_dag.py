@@ -24,10 +24,10 @@ default_args = {
 
 with DAG('retrain_model_dag',
          default_args=default_args,
-         schedule_interval=None,  
+         schedule_interval=None,
          catchup=False) as dag:
 
-    def fetch_data_from_mongodb(ti):  
+    def fetch_data_from_mongodb(ti):
         connection = BaseHook.get_connection('mongo_conn')
         mongo_uri = connection.get_uri()
 
@@ -41,9 +41,9 @@ with DAG('retrain_model_dag',
         model_dir = "/opt/airflow/model/"
         os.makedirs(model_dir, exist_ok=True)
         temp_file_path = os.path.join(model_dir, "fetched_data.csv")
-        
+
         logging.info(f"Saving the data to {temp_file_path}")
-        
+
         data.to_csv(temp_file_path, index=False)
 
         ti.xcom_push(key='data_file_path', value=temp_file_path)
@@ -75,7 +75,7 @@ with DAG('retrain_model_dag',
 
         rUs = RandomUnderSampler(random_state=666)
         X_resampled, y_resampled = rUs.fit_resample(X_cleaned, y_cleaned)
-        
+
         pca = PCA(n_components=0.85)
         X_resampled_pca = pca.fit_transform(X_resampled)
 
@@ -165,8 +165,6 @@ with DAG('retrain_model_dag',
         else:
             logging.info(f"Old model retained with recall {current_model_recall}. New model had {new_model_recall}.")
 
-
-
     evaluate_and_overwrite_task = PythonOperator(
         task_id='evaluate_and_overwrite_task',
         python_callable=evaluate_and_overwrite
@@ -181,7 +179,7 @@ with DAG('retrain_model_dag',
     clean_up_task = PythonOperator(
         task_id='clean_up_task',
         python_callable=clean_up_temp_file,
-        trigger_rule='all_done'  
+        trigger_rule='all_done'
     )
 
     # Define task sequence

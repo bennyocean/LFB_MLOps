@@ -22,14 +22,13 @@ with DAG('predict_model_dag',
          default_args=default_args,
          schedule='@daily',
          catchup=False) as dag:
-    
+
     def load_model(ti):
         model_path = "/opt/airflow/model/model.pkl"
         pca_path = "/opt/airflow/model/pca.pkl"
 
         ti.xcom_push(key='model_path', value=model_path)
         ti.xcom_push(key='pca_path', value=pca_path)
-
 
     load_model_task = PythonOperator(
         task_id='load_model_task',
@@ -38,11 +37,11 @@ with DAG('predict_model_dag',
 
     def fetch_data_from_mongodb():
         try:
-            connection = BaseHook.get_connection('mongo_conn')  
+            connection = BaseHook.get_connection('mongo_conn')
             mongo_uri = connection.get_uri()
 
             if not mongo_uri:
-                raise ValueError("MongoDB URI not found in Airflow connection.")
+                raise ValueError("MongoDB URI not found in mongo_conn.")
 
             client = MongoClient(mongo_uri)
             db = client['lfb']
@@ -90,7 +89,7 @@ with DAG('predict_model_dag',
 
         random_row = raw_data.sample(n=1)
         processed_data = preprocess_data(random_row, pca)
-        prediction = model.predict(processed_data)[0]  
+        prediction = model.predict(processed_data)[0]
 
         if target_value is not None:
             comparison_result = (prediction == target_value)
@@ -106,9 +105,9 @@ with DAG('predict_model_dag',
 
         prediction_doc = {
             "prediction": int(prediction),
-            "input_data": random_row.to_dict(orient='records')[0],  
+            "input_data": random_row.to_dict(orient='records')[0],
             "timestamp": datetime.now(),
-            "actual_target": int(target_value) if target_value is not None else None,  
+            "actual_target": int(target_value) if target_value is not None else None,
             "match": bool(comparison_result) if target_value is not None else None
         }
 
