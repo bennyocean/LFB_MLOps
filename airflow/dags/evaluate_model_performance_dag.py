@@ -8,6 +8,7 @@ from sklearn.decomposition import PCA
 from imblearn.under_sampling import RandomUnderSampler
 import joblib
 import pandas as pd
+import logging
 
 default_args = {
     'owner': 'airflow',
@@ -29,11 +30,29 @@ def store_model_metrics(ti):
     test_data = pd.DataFrame(list(collection.find()))
     test_data = test_data.drop(columns=['_id'], errors='ignore')
 
+    if 'data' in test_data.columns:
+        test_data = test_data.drop(columns=['data'])
+        logging.info("'data' column dropped.")
+
     X_test = test_data.drop(columns=['ResponseTimeBinary'], errors='ignore')
     y_test = test_data['ResponseTimeBinary']
 
+    missing_X = X_test.isna().sum()
+    missing_y = y_test.isna().sum()
+    logging.info(f"Missing values in feature columns (X_test): \n{missing_X[missing_X > 0]}")
+    logging.info(f"Missing values in target variable (y_test): {missing_y}")
+
+    combined = pd.concat([X_test, y_test], axis=1)
+    combined_cleaned = combined.dropna()
+
+    X_cleaned = combined_cleaned.drop(columns=['ResponseTimeBinary'])
+    y_cleaned = combined_cleaned['ResponseTimeBinary']
+
+    if X_cleaned.empty or y_cleaned.empty:
+        raise ValueError("No valid samples left after removing rows with NaN values.")
+
     rUs = RandomUnderSampler(random_state=666)
-    X_resampled, y_resampled = rUs.fit_resample(X_test, y_test)
+    X_resampled, y_resampled = rUs.fit_resample(X_cleaned, y_cleaned)
 
     pca = PCA(n_components=0.85)
     X_resampled_pca = pca.fit_transform(X_resampled)
@@ -62,6 +81,7 @@ def store_model_metrics(ti):
     metrics_collection = metrics_db[metrics_collection_name]
     metrics_collection.insert_one(metrics)
     print(f"Model metrics stored successfully in MongoDB.")
+
 
 
 with DAG('evaluate_model_performance_dag',
