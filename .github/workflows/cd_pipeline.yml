@@ -1,0 +1,59 @@
+name: CD Pipeline #Trigger Airflow DAG
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * *'  # Täglich um Mitternacht (kann angepasst werden)
+  push:
+    branches:
+      - main
+
+jobs:
+  trigger_dag:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    # Install Docker and Docker Compose
+    - name: Install Docker and Docker Compose
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker docker-compose
+
+    # Set up and start the Docker Compose services
+    - name: Set up Docker Compose
+      run: |
+        docker-compose up --build --force-recreate -d
+
+    - name: Wait for Airflow to be ready
+      run: |
+        until $(curl --output /dev/null --silent --head --fail http://localhost:8080); do
+          echo "Waiting for Airflow webserver..."
+          sleep 20
+        done
+
+    - name: Check for DAGs
+      run: |
+        until curl --fail http://localhost:8080/api/v1/dags/retrain_model_dag; do
+          echo "Waiting for DAGs to be loaded..."
+          sleep 10
+        done
+
+    - name: Trigger Airflow DAG
+      run: |
+        # Login und Erhalt eines Session-Cookies
+        curl -i -X POST "http://localhost:8080/api/v1/security/login" \
+          --header "Content-Type: application/json" \
+          --data '{"username": "admin", "password": "psw"}' -c cookies.txt
+
+        # Verwenden des Session-Cookies zum Triggern des DAGs
+        curl -X POST "http://localhost:8080/api/v1/dags/retrain_model_dag/dagRuns" \
+        --header "Content-Type: application/json" \
+        --data '{"conf": {}}' \
+        -b cookies.txt
+
+    # Tear down the Docker Compose services
+    - name: Tear down Docker Compose
+      run: docker-compose down
