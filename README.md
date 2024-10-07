@@ -77,6 +77,27 @@ airflow scheduler
 - Start these in two different terminals
 - Access the interface at [http://localhost:8080](http://localhost:8080).
 
+## Monitoring & Logging
+
+To ensure the operational health and performance of the LFB API, we have integrated **Prometheus** for metrics collection and **Grafana** for metrics visualization.
+
+### Prometheus Setup
+Prometheus is used for collecting metrics from the API. To access Prometheus:
+
+1. Make sure the containers are spun up
+2. Access Prometheus in your browser at [http://localhost:9090](http://localhost:9090)
+
+### Grafana Setup
+Grafana is used for visualizing metrics collected by Prometheus.
+
+1. Access Prometheus in your browser at [http://localhost:3000](http://localhost:3000)
+2. Credentials stored in GitHub Secrets allow for automated login.
+3. Import Grafana dashboard config file (grafana_dashboard/my_dashboard.json) to set up dashboard.
+4. Explore the following API key metrics in Grafana:
+  - **API Request Latency Over Time:** Tracks the response time of API requests, helping to monitor performance and spot potential bottlenecks.
+  - **CPU Usage:** Measures CPU consumption to ensure the API isn’t overloaded, which could affect response times and overall system stability.
+  - **API Error Rate (4xx/5xx status codes):** Monitors the rate of client (4xx) and server (5xx) errors to help identify bugs or issues that affect the API's functionality.
+
 ## Contributing
 Provide guidelines on how others can contribute to your project.
 
