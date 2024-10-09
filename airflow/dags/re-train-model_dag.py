@@ -1,3 +1,5 @@
+import shutil
+import time
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.hooks.base import BaseHook
@@ -108,6 +110,13 @@ with DAG('retrain_model_dag',
         python_callable=train_new_model
     )
 
+    def version_old_model(model_path):
+        timestamp = time.strftime("%Y%m%d-%H%M%S")
+        if os.path.exists(model_path):
+            new_model_version = model_path.replace(".pkl", f"_{timestamp}.pkl")
+            shutil.move(model_path, new_model_version)
+            logging.info(f"Altes Modell versioniert als {new_model_version}")
+
     def evaluate_and_overwrite(ti):
         temp_file_path = ti.xcom_pull(task_ids='fetch_data_task', key='data_file_path')
 
@@ -157,10 +166,14 @@ with DAG('retrain_model_dag',
 
         # Compare the recall scores
         if new_model_recall > current_model_recall:
-            # Overwrite the model and PCA if the new one is better
+            # Version for old model
+            version_old_model(model_path)
+
+            # Speichere das neue Modell und die anderen Komponenten (PCA, UnderSampler)
             joblib.dump(new_model, model_path)
             joblib.dump(new_pca, old_pca_path)
             joblib.dump(new_rUs, old_undersampler_path)
+            
             logging.info(f"New model with recall {new_model_recall} replaces the old model with recall {current_model_recall}")
         else:
             logging.info(f"Old model retained with recall {current_model_recall}. New model had {new_model_recall}.")
@@ -184,3 +197,4 @@ with DAG('retrain_model_dag',
 
     # Define task sequence
     fetch_data_task >> train_model_task >> evaluate_and_overwrite_task >> clean_up_task
+

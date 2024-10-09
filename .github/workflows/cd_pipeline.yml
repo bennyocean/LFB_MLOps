@@ -34,25 +34,25 @@ jobs:
           sleep 20
         done
 
-    - name: Check for DAGs
+    # Install Python dependencies (BeautifulSoup and requests)
+    - name: Install BeautifulSoup
       run: |
-        until curl --fail http://localhost:8080/api/v1/dags/retrain_model_dag; do
-          echo "Waiting for DAGs to be loaded..."
-          sleep 10
-        done
+        pip install beautifulsoup4 requests
 
-    - name: Trigger Airflow DAG
+    - name: Trigger Airflow DAG using Python Client
       run: |
-        # Login und Erhalt eines Session-Cookies
-        curl -i -X POST "http://localhost:8080/api/v1/security/login" \
-          --header "Content-Type: application/json" \
-          --data '{"username": "admin", "password": "psw"}' -c cookies.txt
+        python ./airflow/trigger_dag.py
 
-        # Verwenden des Session-Cookies zum Triggern des DAGs
-        curl -X POST "http://localhost:8080/api/v1/dags/retrain_model_dag/dagRuns" \
-        --header "Content-Type: application/json" \
-        --data '{"conf": {}}' \
-        -b cookies.txt
+    # Commit and push changes in ./model-folder
+    - name: Commit and Push Changes
+      run: |
+        git config --global user.name "github-actions"
+        git config --global user.email "github-actions@github.com"
+        git add ./model/*
+        git commit -m "Updated model and versioned old model"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     # Tear down the Docker Compose services
     - name: Tear down Docker Compose
