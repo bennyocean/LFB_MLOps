@@ -1,7 +1,15 @@
-# London Fire Brigade
+## Introduction
 
-## Description
-The London Fire Brigade (LFB) Response Time project is dedicated to analyzing, predicting, and optimizing the response times of the LFB, the busiest fire and rescue service in the United Kingdom and one of the largest in the world. Swift and precise responses are vital for mitigating damage caused by fires and other emergencies.
+This repository contains the code for our Machine Learning Operation (MLOPs) project, focused on deploying, automating, and monitoring ML models to predict response times for the London Fire Brigade (LFB).
+
+The project was developed as part of our [ML Engineering](https://datascientest.com/en/machine-learning-engineer-course) training at [DataScientest](https://datascientest.com/), in cooperation with [Panthéon-Sorbonne University](https://www.pantheonsorbonne.fr/). For an overview of the system's architecture and workflows, feel free to download the project's [presentation](./presentation/lfb_mlops_overview.pdf).
+
+Additionally, this repository follows up on the data preprocessing, analysis, and model development work. You can find the related repository [here](https://github.com/bennyocean/LFB_ResponseTimes_Prediction.git). 
+
+This project was developed by the following team :
+- Ismarah MAIER ([GitHub](https://github.com/isi-pizzy) / [LinkedIn](https://www.linkedin.com/in/ismarah-maier-18496613b/))
+- René Gross ([GitHub](https://github.com/RenGross) / [LinkedIn](https://www.linkedin.com/in/rené-groß-013a2b20b/))
+- Dr. Benjamin SCHELLINGER ([GitHub](https://github.com/bennyocean) / [LinkedIn](https://www.linkedin.com/in/benjaminschellinger/))
 
 ## Prerequisites
 Before getting started, ensure you have the following installed:
@@ -12,7 +20,7 @@ Before getting started, ensure you have the following installed:
 
 ### Clone the Repository
 ```bash
-git clone https://github.com/DataScientest-Studio/AUG24-BMLOPS-INT-LFB.git
+git clone https://github.com/bennyocean/LFB_MLOps.git
 cd AUG24-BMLOPS-INT-LFB
 ```
 
@@ -20,7 +28,10 @@ cd AUG24-BMLOPS-INT-LFB
 Use the provided `environment.yaml` file to create the environment:
 
 ```bash
-conda env create -f environment.yaml
+#for Mac/Linux OS
+conda env create -f environment.yml
+#for Windows OS
+conda env create -f environment_win.yml
 ```
 
 ### Activate the Environment
@@ -30,16 +41,14 @@ Activate the Conda environment before running any scripts:
 conda activate lfb_env
 ```
 
-## Updating the Conda Environment
+### Updating the Conda Environment
 If you add new dependencies or want to update the environment, you can export the updated environment:
 
 ```bash
 conda env export > environment.yaml
 ```
 
-Share this updated `environment.yaml` with your teammates to keep the environment consistent.
-
-## Building and Running Containers
+## Building & Running Containers
 
 To build and run the containers, execute the following command:
 
@@ -65,7 +74,7 @@ docker-compose down
 
 This will stop and remove all containers defined in the `docker-compose.yml`.
 
-## Airflow
+## Automation with Apache Airflow
 - Starting the **Webserver**: 
 ```bash 
 airflow webserver --port 8080
@@ -92,15 +101,9 @@ Grafana is used for visualizing metrics collected by Prometheus.
 
 1. Access Prometheus in your browser at [http://localhost:3000](http://localhost:3000)
 2. Credentials stored in GitHub Secrets allow for automated login.
-3. Import Grafana dashboard config file (grafana_dashboard/my_dashboard.json) to set up dashboard.
+3. You can import the Grafana dashboard using the following config file: [Import Grafana Dashboard](./grafana_dashboard/my_dashboard.json)
+
 4. Explore the following API key metrics in Grafana:
   - **API Request Latency Over Time:** Tracks the response time of API requests, helping to monitor performance and spot potential bottlenecks.
   - **CPU Usage:** Measures CPU consumption to ensure the API isn’t overloaded, which could affect response times and overall system stability.
   - **API Error Rate (4xx/5xx status codes):** Monitors the rate of client (4xx) and server (5xx) errors to help identify bugs or issues that affect the API's functionality.
-
-## Contributing
-Provide guidelines on how others can contribute to your project.
-
-## License
-Include information about the license for your project.
-```
