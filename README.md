@@ -2,7 +2,7 @@
 
 This repository contains the code for our Machine Learning Operation (MLOPs) project, focused on deploying, automating, and monitoring ML models to predict response times for the London Fire Brigade (LFB).
 
-The project was developed as part of our [ML Engineering](https://datascientest.com/en/machine-learning-engineer-course) training at [DataScientest](https://datascientest.com/), in cooperation with [Panthéon-Sorbonne University](https://www.pantheonsorbonne.fr/). For an overview of the system's architecture and workflows, feel free to download the project's [presentation](./presentation/lfb_mlops_overview.pdf).
+The project was developed as part of our [ML Engineering](https://datascientest.com/en/machine-learning-engineer-course) training at [DataScientest](https://datascientest.com/), in cooperation with [Panthéon-Sorbonne University](https://www.pantheonsorbonne.fr/). For an overview of the system's architecture and workflows, feel free to download the project's [presentation](./presentation/lfb_mlops_presentation.pdf).
 
 Additionally, this repository follows up on the data preprocessing, analysis, and model development work. You can find the related repository [here](https://github.com/bennyocean/LFB_ResponseTimes_Prediction.git). 
 
